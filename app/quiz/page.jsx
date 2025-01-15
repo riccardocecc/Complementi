@@ -1,13 +1,13 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation'; // Importiamo questo hook
+import { useSearchParams } from 'next/navigation'; 
 import { quiz } from '../data.js';
 import { quiz1_50 } from '../data1-50.js';
 import { quiz51_99 } from '../data51-99.js';
 import { quiz100_150 } from '../data100-150.js';
 import { quiz151_201 } from '../data151-201.js';
 import { quiz202_252 } from '../data202-252.js';
-import { quiz253_302 } from '../data202-252.js';
+import { quiz253_302 } from '../data253-302.js';
 import { quiz303_347 } from '../data303-347.js';
 import { toast } from 'sonner';
 
@@ -36,6 +36,7 @@ const Page = () => {
     score: 0,
     correctAnswers: 0,
     wrongAnswers: 0,
+    wrongAnsweredOnce: new Set(), 
   });
   const [shuffledAnswers, setShuffledAnswers] = useState([]);
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
@@ -62,7 +63,19 @@ const Page = () => {
   const onAnswerSelected = (answer, idx) => {
     setChecked(true);
     setSelectedAnswerIndex(idx);
-    setSelectedAnswer(answer === shuffledQuestions[activeQuestion].correctAnswer);
+    const isCorrect = answer === shuffledQuestions[activeQuestion].correctAnswer;
+    setSelectedAnswer(isCorrect);
+
+    if (!isCorrect && !result.wrongAnsweredOnce.has(activeQuestion)) {
+      setResult((prev) => {
+        const updatedWrongAnswers = new Set(prev.wrongAnsweredOnce);
+        updatedWrongAnswers.add(activeQuestion);
+        return {
+          ...prev,
+          wrongAnsweredOnce: updatedWrongAnswers,
+        };
+      });
+    }
   };
 
   const nextQuestion = () => {
@@ -83,16 +96,12 @@ const Page = () => {
       setSelectedAnswerIndex(null);
     } else {
       toast("Risposta sbagliata riprova");
-      setResult((prev) => ({
-        ...prev,
-        wrongAnswers: prev.wrongAnswers + 1,
-      }));
     }
   };
 
   return (
     <div className='container'>
-      <h1>Quiz Page</h1>
+      <h1>Quiz</h1>
       <div>
         <h2>
           Question: {activeQuestion + 1}
@@ -126,11 +135,10 @@ const Page = () => {
           </div>
         ) : (
           <div className='quiz-container'>
-            <h3>Results</h3>
+            <h3>Risultato</h3>
             <p>
-              Correct Answers: <span>{result.correctAnswers}</span>
+              Risposte sbagliate: <span>{result.wrongAnsweredOnce.size}</span>
             </p>
-           
             <button onClick={() => window.location.reload()}>Restart</button>
           </div>
         )}
